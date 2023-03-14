@@ -1,11 +1,31 @@
 <!DOCTYPE html>
 <html lang="en-US">
   <head>
-    <meta charset="utf-8" />
-    <title>Hello, world!</title>
+    <meta charset="utf-8"/>
+    <title>muni</title>
   </head>
   <body>
-    <p>Hello, world!</p>
+    <p>muni</p>
+    <input type="text" id="token" size="36">
+    <button id="search">Search</button>
+    <script>
+      const token = window.localStorage.getItem('token');
+      if (token) {
+        document.querySelector('#token').value = token;
+      }
+      document.querySelector('#search').addEventListener('click', () => {
+        const base = 'http://api.511.org/transit/StopMonitoring';
+        const operatorId = 'SF';
+        const outboundStopId = '14231';
+        const inboundStopId = '14232';
+        const token = document.querySelector('#token').value;
+        window.localStorage.setItem('token', token);
+        const url = `${base}?api_key=${token}&agency=${operatorId}&stopcode=${outboundStopId}&format=json`;
+        fetch(url).then(response => response.json()).then(data => console.log(data));
+      });
+    </script>
+  </body>
+</html>
 <!--
     <script type="module">
       import init, { greet } from "./pkg/muni.js";
@@ -14,5 +34,3 @@
       });
     </script>
 -->
-  </body>
-</html>
