@@ -8,6 +8,7 @@
     <p>muni</p>
     <input type="text" id="token" size="36">
     <button id="search">Search</button>
+    <ul id="results"></ul>
     <script>
       const token = window.localStorage.getItem('token');
       if (token) {
@@ -21,7 +22,18 @@
         const token = document.querySelector('#token').value;
         window.localStorage.setItem('token', token);
         const url = `${base}?api_key=${token}&agency=${operatorId}&stopcode=${outboundStopId}&format=json`;
-        fetch(url).then(response => response.json()).then(data => console.log(data));
+        fetch(url).then(response => response.json()).then(data => {
+          data.ServiceDelivery.StopMonitoringDelivery.MonitoredStopVisit.forEach(item => {
+            const utc = item.MonitoredVehicleJourney.MonitoredCall.ExpectedArrivalTime;
+            const time = new Date(utc).toLocaleString('en-US', {
+              localeMatcher: 'best fit',
+              timeZoneName: 'short'
+            });
+            const li = document.createElement('li');
+            li.textContent = time;
+            document.querySelector('#results').appendChild(li);
+          });
+        });
       });
     </script>
   </body>
