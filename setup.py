@@ -2,6 +2,7 @@ import os
 import subprocess
 
 pico_sdk_path = f'{os.getcwd()}/pico-sdk'
+picotool_dir = f'{os.getcwd()}/bin/picotool'
 
 subprocess.run([
     'sudo', 'apt', 'install', 'cmake', 'gcc-arm-none-eabi',
@@ -11,6 +12,7 @@ subprocess.run([
 ])
 
 if not os.path.isdir('pico-sdk'):
+    print('pico-sdk')
     subprocess.run([
         'git', 'clone', 'git@github.com:kaycebasques/pico-sdk.git'
     ])
@@ -20,6 +22,7 @@ if not os.path.isdir('pico-sdk'):
     ])
 
 if not os.path.isdir('picotool'):
+    print('picotool')
     # Don't use --recursive because we don't need mbedtls
     subprocess.run([
         'git', 'clone', 'git@github.com:kaycebasques/picotool.git'
@@ -40,12 +43,13 @@ if not os.path.isdir('picotool'):
     os.chdir('../..')
 
 if not os.path.isdir('build'):
+    print('build')
     os.mkdir('build')
     os.chdir('build')
     subprocess.run([
         'cmake', '..', f'-DPICO_SDK_PATH={pico_sdk_path}',
         '-DPICO_PLATFORM=rp2040',
         '-DPICO_BOARD=pico', '-DPICO_COMPILER=pico_arm_cortex_m0plus_gcc',
-        '-DPICO_GCC_TRIPLE=arm-none-eabi', '-DCMAKE_INSTALL_PREFIX=../bin'
+        '-DPICO_GCC_TRIPLE=arm-none-eabi', f'-Dpicotool_DIR={picotool_dir}'
     ])
     os.chdir('..')
