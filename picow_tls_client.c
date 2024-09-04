@@ -13,34 +13,39 @@
                                  "Connection: close\r\n" \
                                  "\r\n"
 #define TLS_CLIENT_TIMEOUT_SECS  15
+#define TLS_CLIENT_CONNECT_TIMEOUT_MS 60000
 
 extern bool run_tls_client_test(const uint8_t *cert, size_t cert_len, const char *server, const char *request, int timeout);
 
 int main() {
     stdio_init_all();
-
+    sleep_ms(3000);
+    printf("hi\n");
+    printf("wifi_ssid: %s\n", WIFI_SSID);
+    printf("wifi_password: %s\n", WIFI_PASSWORD);
+    sleep_ms(3000);
     if (cyw43_arch_init()) {
-        printf("failed to initialise\n");
+        printf("init fail\n");
         return 1;
     }
+    sleep_ms(3000);
     cyw43_arch_enable_sta_mode();
-
-    //if (cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASSWORD, CYW43_AUTH_WPA2_AES_PSK, 30000)) {
-    if (cyw43_arch_wifi_connect_timeout_ms("CHEEBO", "mindinho", CYW43_AUTH_WPA2_AES_PSK, 30000)) {
-        printf("failed to connect\n");
+    sleep_ms(3000);
+    if (cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASSWORD, CYW43_AUTH_WPA2_AES_PSK, TLS_CLIENT_CONNECT_TIMEOUT_MS)) {
+        printf("connect fail\n");
         return 1;
     }
+    sleep_ms(3000);
     bool pass = run_tls_client_test(NULL, 0, TLS_CLIENT_SERVER, TLS_CLIENT_HTTP_REQUEST, TLS_CLIENT_TIMEOUT_SECS);
+    sleep_ms(3000);
     if (pass) {
-        printf("Test passed\n");
+        printf("test pass\n");
     } else {
-        printf("Test failed\n");
+        printf("test fail\n");
     }
-    /* sleep a bit to let usb stdio write out any buffer to host */
-    sleep_ms(100);
-
+    sleep_ms(3000);
     cyw43_arch_deinit();
-    printf("All done\n");
+    sleep_ms(3000);
+    printf("bye\n");
     return pass ? 0 : 1;
 }
-
