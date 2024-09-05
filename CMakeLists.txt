@@ -5,7 +5,7 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 
 pico_sdk_init()
-add_executable(app main.c tls_common.c)
+add_executable(app main.c)
 pico_enable_stdio_usb(app 1)
 pico_enable_stdio_uart(app 0)
 pico_add_extra_outputs(app)
