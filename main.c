@@ -477,15 +477,19 @@ void display(uint8_t* buf, char* text[], int count, struct render_area frame_are
     }
 }
 
+void zero(uint8_t* buf, struct render_area frame_area) {
+    memset(buf, 0, SSD1306_BUF_LEN);
+    render(buf, &frame_area);
+}
+
 void display_message(uint8_t* buf, struct render_area frame_area, char* message) {
+    zero(buf, frame_area);
     size_t len = strlen(message) + 1;
     char* text[1];
     text[0] = malloc(len);
     strcpy(text[0], message);
     display(buf, text, 1, frame_area);
     free(text[0]);
-    memset(buf, 0, SSD1306_BUF_LEN);
-    render(buf, &frame_area);
 }
 
 int main() {
