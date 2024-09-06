@@ -59,9 +59,11 @@ struct render_area {
     uint8_t end_col;
     uint8_t start_page;
     uint8_t end_page;
-
     int buflen;
 };
+
+void display_message(uint8_t* buf, struct render_area frame_area, char* message);
+
 
 void calc_render_area_buflen(struct render_area *area) {
     // calculate how long the flattened buffer will be for a render area
@@ -221,23 +223,24 @@ void app_i2c_init() {
     gpio_pull_up(APP_I2C_SCL_PIN);
 }
 
-int app_tls_init() {
-    printf("[tls] init\n");
+int app_tls_init(uint8_t* buf, struct render_area frame_area) {
+    display_message(buf, frame_area, "[tls] init");
     if (cyw43_arch_init()) {
-        printf("[tls] init failed\n");
+        display_message(buf, frame_area, "[tls] init failed");
         return 1;
     }
     sleep_ms(1000);
-    printf("[tls] enable sta mode\n");
+    display_message(buf, frame_area, "[tls] enable sta mode");
     cyw43_arch_enable_sta_mode();
     sleep_ms(1000);
-    printf("[tls] connect\n");
+    display_message(buf, frame_area, "[tls] connect");
     if (cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASSWORD, CYW43_AUTH_WPA2_AES_PSK, TLS_CLIENT_CONNECT_TIMEOUT_MS)) {
-        printf("[tls] connect failedl\n");
+        display_message(buf, frame_area, "[tls] connect failed");
         return 1;
     }
     sleep_ms(1000);
-    printf("[tls] init done\n");
+    display_message(buf, frame_area, "[tls] init done");
+    return 0;
 }
 
 
@@ -473,13 +476,16 @@ void display(uint8_t* buf, char* text[], int count, struct render_area frame_are
     }
 }
 
+void display_message(uint8_t* buf, struct render_area frame_area, char* message) {
+    size_t len = strlen(message) + 1;
+    char* text[1];
+    text[0] = malloc(len);
+    strcpy(text[0], message);
+    display(buf, text, 1, frame_area);
+    free(text[0]);
+}
+
 int main() {
-    stdio_init_all();
-    app_i2c_init();
-    app_ssd1306_init();
-    sleep_ms(1000);
-    // app_tls_init();
-    // Initialize render area for entire frame (SSD1306_WIDTH pixels by SSD1306_NUM_PAGES pages)
     struct render_area frame_area = {
         start_col: 0,
         end_col : SSD1306_WIDTH - 1,
@@ -487,17 +493,14 @@ int main() {
         end_page : SSD1306_NUM_PAGES - 1
     };
     calc_render_area_buflen(&frame_area);
-    // zero the entire display
     uint8_t buf[SSD1306_BUF_LEN];
+    stdio_init_all();
+    app_i2c_init();
+    app_ssd1306_init();
+    // zero the display
     memset(buf, 0, SSD1306_BUF_LEN);
     render(buf, &frame_area);
-    // flash the screen 3 times
-    for (int i = 0; i < 3; i++) {
-        SSD1306_send_cmd(SSD1306_SET_ALL_ON);    // Set all pixels on
-        sleep_ms(500);
-        SSD1306_send_cmd(SSD1306_SET_ENTIRE_ON); // go back to following RAM for pixel state
-        sleep_ms(500);
-    }
+    app_tls_init(buf, frame_area);
     // bool pass = run_tls_client_test(NULL, 0, TLS_CLIENT_SERVER, TLS_CLIENT_HTTP_REQUEST, TLS_CLIENT_TIMEOUT_SECS);
     // sleep_ms(1000);
     // if (pass) {
@@ -507,26 +510,6 @@ int main() {
     // }
     // sleep_ms(1000);
 restart:
-    char *text[] = {
-        "display",
-        "     has",
-        "been",
-        "     encapsulated"
-    };
-    display(buf, text, count_of(text), frame_area);
-
-    SSD1306_send_cmd(SSD1306_SET_INV_DISP);
-    sleep_ms(1000);
-    SSD1306_send_cmd(SSD1306_SET_NORM_DISP);
-    sleep_ms(1000);
-    SSD1306_send_cmd(SSD1306_SET_INV_DISP);
-    sleep_ms(1000);
-    SSD1306_send_cmd(SSD1306_SET_NORM_DISP);
-    // Scroll the text off the screen
-    SSD1306_scroll(true);
-    sleep_ms(5000);
-    SSD1306_scroll(false);
-    // Clear the screen
     memset(buf, 0, SSD1306_BUF_LEN);
     render(buf, &frame_area);
     goto restart;
