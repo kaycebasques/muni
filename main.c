@@ -63,6 +63,7 @@ struct render_area {
 };
 
 void display_message(uint8_t* buf, struct render_area frame_area, char* message);
+void display(uint8_t* buf, char* text[], int count, struct render_area frame_area);
 
 
 void calc_render_area_buflen(struct render_area *area) {
@@ -224,7 +225,7 @@ void app_i2c_init() {
 }
 
 int app_tls_init(uint8_t* buf, struct render_area frame_area) {
-    display_message(buf, frame_area, "[tls] init");
+    display_message(buf, frame_area, "tls init");
     if (cyw43_arch_init()) {
         display_message(buf, frame_area, "[tls] init failed");
         return 1;
@@ -483,6 +484,8 @@ void display_message(uint8_t* buf, struct render_area frame_area, char* message)
     strcpy(text[0], message);
     display(buf, text, 1, frame_area);
     free(text[0]);
+    memset(buf, 0, SSD1306_BUF_LEN);
+    render(buf, &frame_area);
 }
 
 int main() {
