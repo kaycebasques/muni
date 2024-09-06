@@ -453,68 +453,9 @@ bool run_tls_client_test(const uint8_t *cert, size_t cert_len, const char *serve
     return err == 0;
 }
 
-
-int main() {
-    stdio_init_all();
-    app_i2c_init();
-    app_ssd1306_init();
-    sleep_ms(5000);
-    printf("WELCOME TO THE THUNDERDOME\n");
-    app_tls_init();
-
-    // Initialize render area for entire frame (SSD1306_WIDTH pixels by SSD1306_NUM_PAGES pages)
-    struct render_area frame_area = {
-        start_col: 0,
-        end_col : SSD1306_WIDTH - 1,
-        start_page : 0,
-        end_page : SSD1306_NUM_PAGES - 1
-        };
-
-    calc_render_area_buflen(&frame_area);
-
-    // zero the entire display
-    uint8_t buf[SSD1306_BUF_LEN];
-    memset(buf, 0, SSD1306_BUF_LEN);
-    render(buf, &frame_area);
-
-    // intro sequence: flash the screen 3 times
-    for (int i = 0; i < 3; i++) {
-        SSD1306_send_cmd(SSD1306_SET_ALL_ON);    // Set all pixels on
-        sleep_ms(500);
-        SSD1306_send_cmd(SSD1306_SET_ENTIRE_ON); // go back to following RAM for pixel state
-        sleep_ms(500);
-    }
-
-    bool pass = run_tls_client_test(NULL, 0, TLS_CLIENT_SERVER, TLS_CLIENT_HTTP_REQUEST, TLS_CLIENT_TIMEOUT_SECS);
-    sleep_ms(1000);
-    if (pass) {
-        printf("test pass\n");
-    } else {
-        printf("test fail\n");
-    }
-    sleep_ms(1000);
-    //cyw43_arch_deinit();
-    //sleep_ms(3000);
-    //printf("bye\n");
-    //return pass ? 0 : 1;
-
-
-restart:
-
-
-    char *text[] = {
-        "A long time ago",
-        "  on an OLED ",
-        "   display",
-        " far far away",
-        "Lived a small",
-        "red raspberry",
-        "by the name of",
-        "    PICO"
-    };
-
+void display(uint8_t* buf, char* text[], int count, struct render_area frame_area) {
     int y = 0;
-    for (uint i = 0; i < count_of(text); i++) {
+    for (uint i = 0; i < count; i++) {
         WriteString(buf, 5, y, text[i]);
         y += 8;
         // Height limit reached. Show some lines.
@@ -530,6 +471,49 @@ restart:
         render(buf, &frame_area);
         sleep_ms(3000);
     }
+}
+
+int main() {
+    stdio_init_all();
+    app_i2c_init();
+    app_ssd1306_init();
+    sleep_ms(1000);
+    // app_tls_init();
+    // Initialize render area for entire frame (SSD1306_WIDTH pixels by SSD1306_NUM_PAGES pages)
+    struct render_area frame_area = {
+        start_col: 0,
+        end_col : SSD1306_WIDTH - 1,
+        start_page : 0,
+        end_page : SSD1306_NUM_PAGES - 1
+    };
+    calc_render_area_buflen(&frame_area);
+    // zero the entire display
+    uint8_t buf[SSD1306_BUF_LEN];
+    memset(buf, 0, SSD1306_BUF_LEN);
+    render(buf, &frame_area);
+    // flash the screen 3 times
+    for (int i = 0; i < 3; i++) {
+        SSD1306_send_cmd(SSD1306_SET_ALL_ON);    // Set all pixels on
+        sleep_ms(500);
+        SSD1306_send_cmd(SSD1306_SET_ENTIRE_ON); // go back to following RAM for pixel state
+        sleep_ms(500);
+    }
+    // bool pass = run_tls_client_test(NULL, 0, TLS_CLIENT_SERVER, TLS_CLIENT_HTTP_REQUEST, TLS_CLIENT_TIMEOUT_SECS);
+    // sleep_ms(1000);
+    // if (pass) {
+    //     printf("test pass\n");
+    // } else {
+    //     printf("test fail\n");
+    // }
+    // sleep_ms(1000);
+restart:
+    char *text[] = {
+        "display",
+        "     has",
+        "been",
+        "     encapsulated"
+    };
+    display(buf, text, count_of(text), frame_area);
 
     SSD1306_send_cmd(SSD1306_SET_INV_DISP);
     sleep_ms(1000);
@@ -538,17 +522,13 @@ restart:
     SSD1306_send_cmd(SSD1306_SET_INV_DISP);
     sleep_ms(1000);
     SSD1306_send_cmd(SSD1306_SET_NORM_DISP);
-
     // Scroll the text off the screen
     SSD1306_scroll(true);
     sleep_ms(5000);
     SSD1306_scroll(false);
-
     // Clear the screen
     memset(buf, 0, SSD1306_BUF_LEN);
     render(buf, &frame_area);
-
     goto restart;
-
     return 0;
 }
